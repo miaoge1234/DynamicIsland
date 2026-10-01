@@ -1,0 +1,98 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ============ 文字 ============ -->
+    <SolidColorBrush x:Key="TextPrimary" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="TextSecondary" Color="#D6FFFFFF" />
+    <SolidColorBrush x:Key="TextTertiary" Color="#96FFFFFF" />
+
+    <!-- ============ 玻璃 ============ -->
+    <!--
+      淡淡的深色烟熏玻璃：背景的模糊依然透得出来，
+      但压了一层薄薄的暗色，白字在任何壁纸上都读得清。
+    -->
+    <LinearGradientBrush x:Key="GlassTint" StartPoint="0,0" EndPoint="0.3,1">
+        <GradientStop Color="#A4141720" Offset="0" />
+        <GradientStop Color="#9C12151C" Offset="0.55" />
+        <GradientStop Color="#A8191D26" Offset="1" />
+    </LinearGradientBrush>
+
+    <!-- 顶部柔光：液态玻璃的"液体"感 -->
+    <LinearGradientBrush x:Key="GlassSheen" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#1FFFFFFF" Offset="0" />
+        <GradientStop Color="#0AFFFFFF" Offset="0.55" />
+        <GradientStop Color="#00FFFFFF" Offset="1" />
+    </LinearGradientBrush>
+
+    <!-- 顶边高光：一道细亮线，玻璃边缘的反光 -->
+    <LinearGradientBrush x:Key="GlassTopHighlight" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#00FFFFFF" Offset="0" />
+        <GradientStop Color="#0FFFFFFF" Offset="0.12" />
+        <GradientStop Color="#7AFFFFFF" Offset="0.5" />
+        <GradientStop Color="#0FFFFFFF" Offset="0.88" />
+        <GradientStop Color="#00FFFFFF" Offset="1" />
+    </LinearGradientBrush>
+
+    <SolidColorBrush x:Key="GlassBorder" Color="#26FFFFFF" />
+
+    <!-- ============ 强调色 ============ -->
+    <SolidColorBrush x:Key="AccentMusic" Color="#FFEB5B5B" />
+    <SolidColorBrush x:Key="AccentQq" Color="#FF4C9AFF" />
+    <SolidColorBrush x:Key="AccentCall" Color="#FF34C759" />
+
+    <!-- ============ 圆形图标按钮 ============ -->
+    <Style x:Key="GlassIconButton" TargetType="Button">
+        <Setter Property="Background" Value="#1FFFFFFF" />
+        <Setter Property="Foreground" Value="{StaticResource TextPrimary}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bg"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="999"
+                            RenderTransformOrigin="0.5,0.5"
+                            SnapsToDevicePixels="True">
+                        <Border.RenderTransform>
+                            <ScaleTransform ScaleX="1" ScaleY="1" />
+                        </Border.RenderTransform>
+                        <ContentPresenter HorizontalAlignment="Center"
+                                          VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="#38FFFFFF" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="#14FFFFFF" />
+                            <Setter TargetName="Bg" Property="RenderTransform">
+                                <Setter.Value>
+                                    <ScaleTransform ScaleX="0.9" ScaleY="0.9" />
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.3" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ============ 文本 ============ -->
+    <Style x:Key="ClockText" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI Variable Display, Segoe UI" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{StaticResource TextPrimary}" />
+    </Style>
+
+    <Style x:Key="CaptionText" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="Foreground" Value="{StaticResource TextTertiary}" />
+    </Style>
+
+</ResourceDictionary>

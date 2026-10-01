@@ -1,0 +1,27 @@
+# 构建产物
+bin/
+obj/
+publish/
+
+# 开发期的本地截图（会拍到桌面内容，不要提交）
+tools/shots/
+
+# Visual Studio / Rider / VS Code
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+*.userprefs
+
+# NuGet
+*.nupkg
+packages/
+
+# 系统文件
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# 本地日志
+*.log

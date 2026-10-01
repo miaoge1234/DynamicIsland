@@ -1,0 +1,90 @@
+<Window x:Class="DynamicIsland.TimerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="倒计时 / 闹钟"
+        Width="420" SizeToContent="Height"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        WindowStartupLocation="CenterScreen"
+        UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Ideal"
+        TextOptions.TextRenderingMode="Grayscale"
+        FontFamily="Microsoft YaHei UI, Segoe UI">
+
+    <Border Style="{StaticResource DialogRoot}">
+        <Grid>
+            <Rectangle Style="{StaticResource DialogTopGlow}" />
+
+            <StackPanel Margin="0,14,0,20">
+                <Grid Style="{StaticResource DialogTitleBar}" MouseLeftButtonDown="OnTitleBarDrag">
+                    <TextBlock Text="倒计时 / 闹钟" Style="{StaticResource DialogTitle}" />
+                    <Button Style="{StaticResource DialogClose}" Click="OnCancel" />
+                </Grid>
+
+                <StackPanel Margin="20,6,20,0">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                        <RadioButton x:Name="CountdownRadio" Style="{StaticResource DlgRadio}"
+                                     Content="倒计时" IsChecked="True" Checked="OnModeChanged" />
+                        <RadioButton x:Name="AlarmRadio" Style="{StaticResource DlgRadio}"
+                                     Content="闹钟" Checked="OnModeChanged" />
+                    </StackPanel>
+
+                    <!-- 倒计时 -->
+                    <StackPanel x:Name="CountdownPanel">
+                        <TextBlock Text="常用时长" Style="{StaticResource DlgHint}" Margin="0,0,0,8" />
+                        <WrapPanel>
+                            <Button Style="{StaticResource DlgButton}" Content="5 分钟" Tag="5"
+                                    Margin="0,0,6,6" Click="OnQuickPick" />
+                            <Button Style="{StaticResource DlgButton}" Content="10 分钟" Tag="10"
+                                    Margin="0,0,6,6" Click="OnQuickPick" />
+                            <Button Style="{StaticResource DlgButton}" Content="15 分钟" Tag="15"
+                                    Margin="0,0,6,6" Click="OnQuickPick" />
+                            <Button Style="{StaticResource DlgButton}" Content="25 分钟" Tag="25"
+                                    Margin="0,0,6,6" Click="OnQuickPick" />
+                            <Button Style="{StaticResource DlgButton}" Content="45 分钟" Tag="45"
+                                    Margin="0,0,6,6" Click="OnQuickPick" />
+                            <Button Style="{StaticResource DlgButton}" Content="1 小时" Tag="60"
+                                    Margin="0,0,6,6" Click="OnQuickPick" />
+                        </WrapPanel>
+
+                        <TextBlock Text="或者自己填" Style="{StaticResource DlgHint}" Margin="0,10,0,8" />
+                        <StackPanel Orientation="Horizontal">
+                            <TextBox x:Name="HourBox" Text="0" Width="58" Style="{StaticResource DlgTextBox}"
+                                     Padding="8,7" TextAlignment="Center" />
+                            <TextBlock Text="时" Style="{StaticResource DlgLabel}" Margin="6,0,14,0" />
+
+                            <TextBox x:Name="MinuteBox" Text="10" Width="58" Style="{StaticResource DlgTextBox}"
+                                     Padding="8,7" TextAlignment="Center" />
+                            <TextBlock Text="分" Style="{StaticResource DlgLabel}" Margin="6,0,14,0" />
+
+                            <TextBox x:Name="SecondBox" Text="0" Width="58" Style="{StaticResource DlgTextBox}"
+                                     Padding="8,7" TextAlignment="Center" />
+                            <TextBlock Text="秒" Style="{StaticResource DlgLabel}" Margin="6,0,0,0" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- 闹钟 -->
+                    <StackPanel x:Name="AlarmPanel" Visibility="Collapsed">
+                        <TextBlock Text="到点提醒（24 小时制）" Style="{StaticResource DlgHint}" Margin="0,0,0,8" />
+                        <StackPanel Orientation="Horizontal">
+                            <TextBox x:Name="AlarmHourBox" Text="07" Width="58" Style="{StaticResource DlgTextBox}"
+                                     Padding="8,7" TextAlignment="Center" />
+                            <TextBlock Text=":" Style="{StaticResource DlgLabel}" Margin="8,0" FontSize="15" />
+                            <TextBox x:Name="AlarmMinuteBox" Text="30" Width="58" Style="{StaticResource DlgTextBox}"
+                                     Padding="8,7" TextAlignment="Center" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <TextBlock x:Name="ErrorText" FontSize="11.5" Foreground="#FFFF8A8A"
+                               Margin="0,12,0,0" TextWrapping="Wrap" />
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
+                        <Button Style="{StaticResource DlgButton}" Content="取消" Margin="0,0,8,0" Click="OnCancel" />
+                        <Button Style="{StaticResource DlgPrimaryButton}" Content="开始" Click="OnStart" />
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>
