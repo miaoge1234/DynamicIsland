@@ -21,6 +21,16 @@
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
 
+  <!-- 开源仓库信息 -->
+  <PropertyGroup>
+    <Version>1.0.0</Version>
+    <Authors>miaoge1234</Authors>
+    <Product>灵动岛 DynamicIsland</Product>
+    <Description>Windows 桌面灵动岛：真的能透出背后画面的液态玻璃，集成网易云音乐、天气、Windows 未读消息、待办、倒计时和 CPU/内存监控</Description>
+    <RepositoryUrl>https://github.com/miaoge1234/DynamicIsland</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
   <ItemGroup>
     <!-- 读 Windows 通知数据库（未读消息）用，只读打开，不写系统文件 -->
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.12" />

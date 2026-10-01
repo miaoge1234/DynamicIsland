@@ -47,7 +47,7 @@ Windows 桌面顶部的「灵动岛」：**真的能透出背后画面的液态�
 ## 快速开始
 
 ```bash
-git clone https://github.com/<你的用户名>/DynamicIsland.git
+git clone https://github.com/miaoge1234/DynamicIsland.git
 cd DynamicIsland
 dotnet build -c Release
 dotnet run -c Release
