@@ -24,6 +24,13 @@ internal static class Diagnostics
     public static bool ExitAfter =>
         Environment.GetEnvironmentVariable("DSH_ISLAND_DIAG_EXIT") == "1";
 
+    /// <summary>
+    /// 演示模式：底图换成现场生成的渐变，消息 / 音乐 / 天气 / 性能全部换成示例数据。
+    /// 专门用来出宣传截图 —— 能展示玻璃效果，又不会把用户桌面和私人消息拍进去。
+    /// </summary>
+    public static bool Demo =>
+        Environment.GetEnvironmentVariable("DSH_ISLAND_DEMO") == "1";
+
     public static void Write(string message)
     {
         try

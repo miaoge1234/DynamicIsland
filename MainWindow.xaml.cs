@@ -103,6 +103,9 @@ public partial class MainWindow : Window
     private IntPtr _actionTargetWindow = IntPtr.Zero;
     private readonly List<IslandMessage> _recent = new();
     private readonly HashSet<string> _dismissed = new(StringComparer.Ordinal);
+
+    /// <summary>演示模式用的示例待办（内存里，不落盘）</summary>
+    private List<TodoItem>? _demoTodos;
     private Storyboard? _equalizer;
     private bool _closing;
 
@@ -121,6 +124,8 @@ public partial class MainWindow : Window
 
         // 玻璃参数来自配置。模糊用 CPU 盒子模糊做，半径按缩小倍数换算。
         _capture.Downscale = 6;
+        // 演示模式：底图不用真实屏幕，改成现场生成的渐变，出截图时不会拍到桌面
+        _capture.DemoBackdrop = Diagnostics.Demo;
         _capture.BlurRadius = Math.Clamp((int)Math.Round(_settings.GlassBlurRadius / 8.0), 1, 8);
         _capture.BlurPasses = 2;
         TintRect.Opacity = Math.Clamp(_settings.GlassTintOpacity, 0, 1);
@@ -266,6 +271,12 @@ public partial class MainWindow : Window
         _todos.Save();
         TodoList.ItemsSource = _todos.Items;
 
+        // 演示模式：换成内存里的示例待办
+        if (Diagnostics.Demo)
+        {
+            SetupDemoTodos();
+        }
+
         // 启动时明确停在"消息"页，把页签选中态和空状态都摆正
         SwitchView(showTodos: false);
 
@@ -324,16 +335,40 @@ public partial class MainWindow : Window
     {
         try
         {
-            await Task.Delay(2500);
+            int delay = 2500;
+            if (int.TryParse(Environment.GetEnvironmentVariable("DSH_ISLAND_DIAG_DELAY"), out int custom) && custom > 0)
+            {
+                delay = custom;
+            }
+
+            await Task.Delay(delay);
+
             Diagnostics.LogGeometry(
                 _hwnd,
                 new Point((Width - Host.ActualWidth) / 2.0, HostTopMargin),
                 new Size(Host.ActualWidth, Host.ActualHeight),
                 _dpiScale);
 
+            // 出宣传截图：收起 / 展开(消息) / 展开(待办) 各来一张
+            if (Diagnostics.Demo)
+            {
+                SetExpanded(false);
+                await Task.Delay(700);
+                Diagnostics.Snapshot(Host, "demo-collapsed");
+
+                SetExpanded(true);
+                SwitchView(showTodos: false);
+                await Task.Delay(1100);
+                Diagnostics.Snapshot(Host, "demo-expanded");
+
+                SwitchView(showTodos: true);
+                await Task.Delay(500);
+                Diagnostics.Snapshot(Host, "demo-todos");
+            }
+
             if (Diagnostics.ExitAfter)
             {
-                await Task.Delay(200);
+                await Task.Delay(300);
                 Close();
             }
         }
@@ -815,18 +850,24 @@ public partial class MainWindow : Window
             return;
         }
 
-        CpuText.Text = $"CPU {_monitor.CpuPercent:0}%";
-        CpuText.Foreground = new SolidColorBrush(SystemMonitorService.LoadColor(_monitor.CpuPercent));
+        // 演示模式用固定数值，避免把真实内存容量写进宣传截图
+        double cpu = Diagnostics.Demo ? 18 : _monitor.CpuPercent;
+        double mem = Diagnostics.Demo ? 62 : _monitor.MemoryPercent;
+        double used = Diagnostics.Demo ? 9.8 : _monitor.UsedMemoryGb;
+        double total = Diagnostics.Demo ? 16.0 : _monitor.TotalMemoryGb;
+
+        CpuText.Text = $"CPU {cpu:0}%";
+        CpuText.Foreground = new SolidColorBrush(SystemMonitorService.LoadColor(cpu));
 
         MemText.Text = _settings.ShowMemoryDetail
-            ? $"内存 {_monitor.MemoryPercent:0}%  {_monitor.UsedMemoryGb:0.0}/{_monitor.TotalMemoryGb:0.0}G"
-            : $"内存 {_monitor.MemoryPercent:0}%";
-        MemText.Foreground = new SolidColorBrush(SystemMonitorService.LoadColor(_monitor.MemoryPercent));
+            ? $"内存 {mem:0}%  {used:0.0}/{total:0.0}G"
+            : $"内存 {mem:0}%";
+        MemText.Foreground = new SolidColorBrush(SystemMonitorService.LoadColor(mem));
 
         if (CollapsedCpu.Visibility == Visibility.Visible)
         {
-            CollapsedCpu.Text = $"CPU {_monitor.CpuPercent:0}%";
-            CollapsedCpu.Foreground = new SolidColorBrush(SystemMonitorService.LoadColor(_monitor.CpuPercent));
+            CollapsedCpu.Text = $"CPU {cpu:0}%";
+            CollapsedCpu.Foreground = new SolidColorBrush(SystemMonitorService.LoadColor(cpu));
         }
     }
 
@@ -1043,7 +1084,23 @@ public partial class MainWindow : Window
 
     private void ApplyWeather(WeatherInfo info)
     {
-        var icon = WeatherIcons.Get(_weather.Kind);
+        // 演示模式换成示例城市，避免把真实位置写进宣传截图
+        if (Diagnostics.Demo)
+        {
+            info = new WeatherInfo
+            {
+                City = "杭州",
+                Temperature = 24,
+                FeelsLike = 23,
+                TempMax = 27,
+                TempMin = 18,
+                Humidity = 52,
+                Condition = "晴",
+                IsDay = true,
+            };
+        }
+
+        var icon = WeatherIcons.Get(Diagnostics.Demo ? WeatherKind.Sunny : _weather.Kind);
 
         WeatherIcon.Source = icon;
         CollapsedWeatherIcon.Source = icon;
@@ -1060,6 +1117,22 @@ public partial class MainWindow : Window
         if (!_settings.EnableMusic)
         {
             return;
+        }
+
+        // 演示模式换成示例曲目
+        if (Diagnostics.Demo)
+        {
+            track = new TrackInfo
+            {
+                Title = "起风了",
+                Artist = "买辣椒也用券",
+                Album = "起风了",
+                SourceAppId = "cloudmusic.exe",
+                SourceName = "网易云音乐",
+                IsPlaying = true,
+                Position = TimeSpan.FromSeconds(78),
+                Duration = TimeSpan.FromSeconds(325),
+            };
         }
 
         bool hasTrack = track.HasTrack;
@@ -1125,6 +1198,15 @@ public partial class MainWindow : Window
     {
         if (_isSeeking)
         {
+            return;
+        }
+
+        // 演示模式：进度也固定成示例曲目的，不然每秒的 tick 会把真实播放进度覆盖上来
+        if (Diagnostics.Demo)
+        {
+            ProgressScale.BeginAnimation(ScaleTransform.ScaleXProperty, null);
+            ProgressScale.ScaleX = 78.0 / 325.0;
+            TrackTime.Text = "1:18 / 5:25";
             return;
         }
 
@@ -1287,6 +1369,16 @@ public partial class MainWindow : Window
     /// <summary>合并 Windows 未读通知 + 本地推送，重建列表。岛的大小始终不变。</summary>
     private void RebuildMessageList(IReadOnlyList<IslandMessage> windowsNotifications)
     {
+        // 演示模式只显示编好的示例消息，绝不带出真实通知内容
+        if (Diagnostics.Demo)
+        {
+            MessageList.ItemsSource = DemoMessages();
+            MessageEmpty.Visibility = Visibility.Collapsed;
+            RefreshTodoView();
+            UpdateMoreHint();
+            return;
+        }
+
         var merged = new List<IslandMessage>(windowsNotifications.Count + _recent.Count);
 
         foreach (var message in windowsNotifications)
@@ -1317,6 +1409,46 @@ public partial class MainWindow : Window
     /// <summary>列表重建后刷新一次提示。</summary>
     private void UpdateMoreHint()
         => UpdateMoreHint(MessageScroll.ExtentHeight, MessageScroll.ViewportHeight, MessageScroll.VerticalOffset);
+
+    /// <summary>演示模式用的示例消息（不涉及任何真实内容）。</summary>
+    private static List<IslandMessage> DemoMessages()
+    {
+        var now = DateTimeOffset.Now;
+
+        return new List<IslandMessage>
+        {
+            new()
+            {
+                Key = "demo:1",
+                Kind = MessageKind.Message,
+                Source = "QQ",
+                AppId = "QQ",
+                Title = "张三",
+                Text = "在吗？晚上一起吃饭",
+                ReceivedAt = now.AddMinutes(-2),
+            },
+            new()
+            {
+                Key = "demo:2",
+                Kind = MessageKind.Message,
+                Source = "微信",
+                AppId = "WeChat",
+                Title = "产品设计群",
+                Text = "李四：设计稿更新了，帮忙看下",
+                ReceivedAt = now.AddMinutes(-18),
+            },
+            new()
+            {
+                Key = "demo:3",
+                Kind = MessageKind.Message,
+                Source = "Windows 安全",
+                AppId = "Windows.Defender.SecurityCenter",
+                Title = "病毒防护已打开",
+                Text = "你的设备正在受到保护",
+                ReceivedAt = now.AddHours(-2),
+            },
+        };
+    }
 
     /// <summary>
     /// 用 ScrollChanged 事件自己带的数据判断，而不是去读 ViewportHeight/ExtentHeight——
@@ -1497,8 +1629,20 @@ public partial class MainWindow : Window
     /// <summary>刷新待办区域的显示（数量、空状态、页签文案）。</summary>
     private void RefreshTodoView()
     {
-        int active = _todos.ActiveCount;
-        int total = _todos.Items.Count;
+        // 演示模式用内存里的示例待办，绝不碰用户真实的 todos.json
+        int active;
+        int total;
+
+        if (Diagnostics.Demo && _demoTodos is not null)
+        {
+            total = _demoTodos.Count;
+            active = _demoTodos.Count(t => !t.Done);
+        }
+        else
+        {
+            total = _todos.Items.Count;
+            active = _todos.ActiveCount;
+        }
 
         // 空状态必须跟着页签走：待办页只显示待办提示，消息页只显示消息提示，
         // 否则两边的提示会叠在一起，看着像"合在一起了"。
@@ -1521,6 +1665,19 @@ public partial class MainWindow : Window
         {
             MessageCountText.Text = messageCount > 0 ? $"共 {messageCount} 条未读" : string.Empty;
         }
+    }
+
+    /// <summary>演示模式用的示例待办（只在内存里，不写用户的 todos.json）。</summary>
+    private void SetupDemoTodos()
+    {
+        _demoTodos = new List<TodoItem>
+        {
+            new() { Text = "发 v1.0.0 Release" },
+            new() { Text = "写推广文案（V2EX / 酷安）" },
+            new() { Text = "把 README 的截图补上", Done = true },
+        };
+
+        TodoList.ItemsSource = _demoTodos;
     }
 
     private void OnAddTodo(object sender, RoutedEventArgs e)

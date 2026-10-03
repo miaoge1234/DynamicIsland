@@ -31,6 +31,14 @@ internal sealed class ScreenCapture
     /// <summary>模糊遍数，两三遍就足够接近高斯了</summary>
     public int BlurPasses { get; set; } = 2;
 
+    /// <summary>
+    /// 演示模式：不抓真实屏幕，改成现场生成一张渐变图当底图。
+    /// 出宣传截图用 —— 既能看到玻璃的模糊效果，又不会把桌面内容拍进去。
+    /// </summary>
+    public bool DemoBackdrop { get; set; }
+
+    private bool _demoGenerated;
+
     /// <summary>上一次抓取里，抓屏 + 模糊花了多少毫秒</summary>
     public double LastCaptureMs { get; private set; }
 
@@ -63,6 +71,12 @@ internal sealed class ScreenCapture
         if (physRect.Width <= 0 || physRect.Height <= 0)
         {
             return false;
+        }
+
+        // 演示模式：自己造一张渐变底图，完全不碰屏幕
+        if (DemoBackdrop)
+        {
+            return CaptureDemo(physRect);
         }
 
         int sw = Math.Max(1, physRect.Width / Downscale);
@@ -185,6 +199,86 @@ internal sealed class ScreenCapture
             }
             NativeMethods.ReleaseDC(IntPtr.Zero, screenDc);
         }
+    }
+
+    /// <summary>
+    /// 生成一张演示用的底图：深紫 → 青的斜向渐变，叠三个柔和光斑。
+    /// 颜色跨度够大，模糊之后能明显看出玻璃在"吸"背后的颜色。
+    /// </summary>
+    private bool CaptureDemo(Int32Rect physRect)
+    {
+        int sw = Math.Max(1, physRect.Width / Downscale);
+        int sh = Math.Max(1, physRect.Height / Downscale);
+
+        if (_demoGenerated && _bitmap is not null && _width == sw && _height == sh)
+        {
+            return false;
+        }
+
+        int stride = sw * 4;
+        int needed = stride * sh;
+        if (_buffer.Length < needed)
+        {
+            _buffer = new byte[needed];
+        }
+
+        // 三个光斑：位置、半径、颜色
+        (double x, double y, double r, double cr, double cg, double cb)[] blobs =
+        {
+            (0.15, 0.18, 0.50, 0xFF, 0xE0, 0x8A), // 亮黄
+            (0.84, 0.24, 0.46, 0xFF, 0x4D, 0x9D), // 品红
+            (0.46, 0.95, 0.55, 0x22, 0xD3, 0xEE), // 青蓝
+        };
+
+        for (int y = 0; y < sh; y++)
+        {
+            double ny = (double)y / Math.Max(1, sh - 1);
+
+            for (int x = 0; x < sw; x++)
+            {
+                double nx = (double)x / Math.Max(1, sw - 1);
+
+                // 底色：左上暖橙 → 右下深蓝（黄昏感）。颜色跨度故意拉大，
+                // 这样模糊之后能明显看出玻璃在"吸"背后的颜色。
+                double t = Math.Clamp((nx + ny) * 0.5, 0, 1);
+                double r = 0xF5 + (0x1E - 0xF5) * t;
+                double g = 0x9E + (0x3A - 0x9E) * t;
+                double b = 0x5A + (0x8B - 0x5A) * t;
+
+                // 叠光斑
+                foreach (var blob in blobs)
+                {
+                    double dx = nx - blob.x;
+                    double dy = ny - blob.y;
+                    double dist = Math.Sqrt(dx * dx + dy * dy);
+                    double w = Math.Max(0, 1 - dist / blob.r);
+                    w = w * w * 0.85; // 平方衰减，边缘更柔
+                    r += (blob.cr - r) * w;
+                    g += (blob.cg - g) * w;
+                    b += (blob.cb - b) * w;
+                }
+
+                int i = y * stride + x * 4;
+                _buffer[i] = (byte)Math.Clamp(r, 0, 255);
+                _buffer[i + 1] = (byte)Math.Clamp(g, 0, 255);
+                _buffer[i + 2] = (byte)Math.Clamp(b, 0, 255);
+                _buffer[i + 3] = 255;
+            }
+        }
+
+        Blur(_buffer, sw, sh, BlurRadius, BlurPasses);
+
+        if (_bitmap is null || _width != sw || _height != sh)
+        {
+            _bitmap = new WriteableBitmap(sw, sh, 96, 96, PixelFormats.Bgra32, null);
+            _width = sw;
+            _height = sh;
+        }
+
+        _bitmap.WritePixels(new Int32Rect(0, 0, sw, sh), _buffer, stride, 0);
+        _demoGenerated = true;
+        UpdateCount++;
+        return true;
     }
 
     /// <summary>取样的 FNV 哈希，够快也够准。</summary>

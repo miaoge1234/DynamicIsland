@@ -4,6 +4,20 @@ Windows 桌面顶部的「灵动岛」：**真的能透出背后画面的液态�
 
 不是 WinUI3，用 **WPF + 少量 Win32 互操作**实现，所以能做出任意形状的胶囊、真正的背景模糊和逐帧平滑的形变。
 
+<p align="center">
+  <img src="docs/screenshot-expanded.png" width="640" alt="展开状态">
+</p>
+
+<p align="center">
+  <img src="docs/screenshot-collapsed.png" width="240" alt="收起状态">
+  &nbsp;&nbsp;
+  <img src="docs/screenshot-todos.png" width="640" alt="待办页签">
+</p>
+
+> 上面几张图是程序**自带的演示模式**生成的：底图是现场算出来的渐变
+> （不抓你的屏幕），消息 / 音乐 / 天气 / 性能也全是示例数据。
+> 复现方式见文末「开发 / 调试」。
+
 ```
 ┌──────────────────────────────────────────────┐
 │  22:51       ▁▃▅  正在播放        ☀ 23°      │   ← 收起：一个小胶囊
@@ -11,7 +25,7 @@ Windows 桌面顶部的「灵动岛」：**真的能透出背后画面的液态�
                      ↓ 鼠标移上去
 ┌──────────────────────────────────────────────┐
 │ 22:51  ☀ 23°  ·  CPU 12%  内存 68%  ⏱  ⚙   │
-│ 广州市 · 晴  28°/36°                          │
+│ 杭州市 · 晴  18°/27°                          │
 │ ┌──────────────────────────────────────────┐ │
 │ │ [封面] 歌名 - 歌手       ⏮ ⏯ ⏭          │ │
 │ │        网易云音乐  ━━━━━━━━━○──── 1:02   │ │
@@ -180,13 +194,33 @@ DynamicIsland/
 ## 开发 / 调试
 
 设了环境变量 `DSH_ISLAND_DIAG=1` 后，程序会把自己的画面渲染成 PNG 存到
-`%APPDATA%\DynamicIsland\diag\`，并记录窗口几何信息 —— 不用真的去截图就能检查外观。
+`%APPDATA%\DynamicIsland\diag\`，并记录窗口几何信息 —— 不用真的去截屏就能检查外观。
 
 ```powershell
 $env:DSH_ISLAND_DIAG = "1"          # 开启自检
 $env:DSH_ISLAND_DIAG_EXIT = "1"     # 抓完自动退出
 $env:DSH_ISLAND_DIAG_DELAY = "6000" # 等几毫秒再抓（等天气加载完）
 ```
+
+### 演示模式（出宣传截图用）
+
+再设上 `DSH_ISLAND_DEMO=1` 就进入演示模式，**拍出来的图不含任何真实数据**：
+
+- 玻璃的底图不是抓你的屏幕，而是现场算的一张渐变 —— 既能看到模糊效果，又不会把桌面内容拍进去
+- 消息、音乐、天气、CPU / 内存全部换成示例数据
+- 待办用内存里的示例项，**不会写入你的 `todos.json`**
+
+```powershell
+$env:DSH_ISLAND_DIAG = "1"
+$env:DSH_ISLAND_DEMO = "1"
+$env:DSH_ISLAND_DIAG_EXIT = "1"
+$env:DSH_ISLAND_DIAG_DELAY = "5000"
+
+& ".\bin\Release\net10.0-windows10.0.26100.0\win-x64\DynamicIsland.exe"
+```
+
+会生成三张图（`demo-collapsed` / `demo-expanded` / `demo-todos`）。
+`tools/prepare-screenshots.py` 负责裁掉多余透明边并放进 `docs/`（需要 Pillow）。
 
 ## 许可
 
