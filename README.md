@@ -41,7 +41,7 @@ Windows 桌面顶部的「灵动岛」：**真的能透出背后画面的液态�
 
 ## 下载
 
-不想自己编译的话，直接去 **[Releases](https://github.com/miaoge1234/DynamicIsland/releases/latest)** 下载 `DynamicIsland-v1.0.0-win-x64.exe`：
+不想自己编译的话，直接去 **[Releases](https://github.com/miaoge1234/DynamicIsland/releases/latest)** 下载 `DynamicIsland-v1.0.1-win-x64.exe`：
 
 - 免安装，双击即用，**自带 .NET 运行时**，目标机器什么都不用装
 - 首次启动会慢 1~2 秒（要解压），之后正常

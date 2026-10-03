@@ -23,7 +23,7 @@
 
   <!-- 开源仓库信息 -->
   <PropertyGroup>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <Authors>miaoge1234</Authors>
     <Product>灵动岛 DynamicIsland</Product>
     <Description>Windows 桌面灵动岛：真的能透出背后画面的液态玻璃，集成网易云音乐、天气、Windows 未读消息、待办、倒计时和 CPU/内存监控</Description>
